@@ -1,0 +1,11 @@
+# Ignore my AuthKeys:
+API-Keys.json
+
+# Ignore my refernce info:
+Info/
+
+#Ignore Pycache
+__pycache__/
+
+#Ignore environment var
+.venv/
