@@ -28,6 +28,7 @@ handle_archive_pages_test_path = script_dir / "outputs" / "handle_archive_pages_
 read_archive_page_test_path = script_dir / "outputs" / "read_archive_page_test.html"
 
 auth_json = json_loader.load_json(reddit_auth_test_path)
+
 ##################
 ##HEADER / PROXY##
 ##################
