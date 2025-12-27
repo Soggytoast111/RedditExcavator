@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3-Row Table Template</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        table {
+            border-collapse: collapse;
+            width: 50%; /* Adjust width as needed */
+            margin: 0 auto; /* Centers the table */
+        }
+        th, td {
+            border: 1px solid #dddddd;
+            text-align: left;
+            padding: 12px;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+    </style>
+</head>
+<body>
+
+    <h2 style="text-align:center;">Reddit Excavator</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Retrieved Topics from r/{subreddit}</th>
+            </tr>
+        </thead>
+        <tbody>
+		<tr class="Topic_Container">
+			<tr>
+				<td>TOPIC TITLE!</td>
+			</tr>
+			<tr>
+				<td>submitted on {DATE-TIME} by {AUTHOR} to r/{subreddit}</td>
+			</tr>
+			<tr>
+				<td>{####} comments</td>
+			</tr>
+		</tr>
+		<tr class="Topic_Container">
+			<tr>
+				<td>TOPIC TITLE2!</td>
+			</tr>
+			<tr>
+				<td>submitted on {DATE-TIME} by {AUTHOR} to r/{subreddit}</td>
+			</tr>
+			<tr>
+				<td>{####} comments</td>
+			</tr>
+		</tr>
+        </tbody>
+    </table>
+
+</body>
+</html>

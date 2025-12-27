@@ -1,10 +1,15 @@
 from modules.http_request import http_request
 from modules.get_proxies import get_proxy_list
+from modules.reddit_nav import reddit_reutrn_subreddit_topics, reddit_read_topic, reddit_user_history
+from modules.reddit_parse import parse_reddit_topic_list, parse_reddit_user_history, parse_reddit_topic_page
 
 from pathlib import Path
+import pytest
 import logging
 import requests
 import time
+import random
+import json
 
 log = logging.getLogger(__name__)
 
@@ -12,6 +17,22 @@ def output_path(file_name):
     script_dir = Path(__file__).parent
     output_path = script_dir / "modules_outputs" / file_name
     return output_path
+
+@pytest.fixture(scope="session")
+def generate_working_proxies(pytestconfig):
+    my_working_proxies = pytestconfig.cache.get("my_working_proxies", None)
+    
+    if my_working_proxies is None:
+        test_session = requests.session()
+        proxy_url = 'https://cdn.jsdelivr.net/gh/proxifly/free-proxy-list@main/proxies/protocols/socks4/data.txt'
+        my_proxy_request = get_proxy_list(proxy_url, test_session)
+        my_working_proxies = my_proxy_request.working_proxies
+        pytestconfig.cache.set("my_working_proxies", my_proxy_request.working_proxies) 
+    return my_working_proxies
+
+#########
+##TESTS##
+#########
 
 def test_http_request():
     test_session = requests.session()
@@ -22,5 +43,67 @@ def test_get_proxies():
     test_session = requests.session()
     proxy_url = 'https://cdn.jsdelivr.net/gh/proxifly/free-proxy-list@main/proxies/protocols/socks4/data.txt'
     my_proxy_request = get_proxy_list(proxy_url, test_session)
-    time.sleep(10)
     output_path("get_proxies.html").write_text("\n".join(my_proxy_request.working_proxies), encoding="utf-8")    
+
+def test_reddit_read_topic(generate_working_proxies):
+    test_session = requests.session()
+    #my_working_proxies = generate_working_proxies.config.cache.get("my_working_proxies", None)
+    my_working_proxies = generate_working_proxies
+    selected_proxy = random.choice(my_working_proxies)
+    log.info(f'I selected this proxy: {selected_proxy}')
+    my_read_topic = reddit_read_topic(test_session, {'https': selected_proxy}, 'smarthome', '1kfph4j')
+    if my_read_topic.response.status_code != 200:
+        pytest.fail(f"HTTP FAIL - Status Code: {my_read_topic.response.status_code}")
+    log.info(f'Status Code of Request: {my_read_topic.response.status_code}')
+    output_path("reddit_read_topic.html").write_text(my_read_topic(),  encoding="utf-8")
+    assert my_read_topic   
+
+def test_reddit_user_history(generate_working_proxies):
+    test_session = requests.session()
+    #my_working_proxies = generate_working_proxies.config.cache.get("my_working_proxies", None)
+    my_working_proxies = generate_working_proxies
+    selected_proxy = random.choice(my_working_proxies)
+    log.info(f'I selected this proxy: {selected_proxy}')
+    my_user_history = reddit_user_history(test_session, {'https': selected_proxy}, "Hlord369")
+    if my_user_history.response.status_code != 200:
+        pytest.fail(f"HTTP FAIL - Status Code: {my_user_history.response.status_code}")
+    log.info(f'Status Code of Request: {my_user_history.response.status_code}')
+    output_path("reddit_user_history.html").write_text(my_user_history(), encoding="utf-8")
+    assert my_user_history  
+
+def test_reddit_subreddit_topics(generate_working_proxies):
+    test_session = requests.session()
+    #my_working_proxies = generate_working_proxies.config.cache.get("my_working_proxies", None)
+    my_working_proxies = generate_working_proxies
+    selected_proxy = random.choice(my_working_proxies)
+    log.info(f'I selected this proxy: {selected_proxy}')
+    my_read_topic = reddit_reutrn_subreddit_topics(test_session, {'https': selected_proxy}, 'NoStupidQuestions')
+    if my_read_topic.response.status_code != 200:
+        pytest.fail(f"HTTP FAIL - Status Code: {my_read_topic.response.status_code}")
+    log.info(f'Status Code of Request: {my_read_topic.response.status_code}')
+    output_path("reddit_subreddit_topics.html").write_text(my_read_topic(),  encoding="utf-8")
+    assert my_read_topic  
+
+def test_parse_reddit_topic_list():
+    html_file_path = output_path("reddit_subreddit_topics.html")
+    with open(html_file_path, "r", encoding="utf-8") as file:
+        html_content = file.read()
+
+    my_parsed_data = parse_reddit_topic_list(html_content)
+    output_path("parse_reddit_topic_list.html").write_text(json.dumps(my_parsed_data.scraped_data), encoding="utf-8")  
+
+def test_parse_reddit_user_history():
+    html_file_path = output_path("reddit_user_history.html")
+    with open(html_file_path, "r", encoding="utf-8") as file:
+        html_content = file.read()
+
+    my_parsed_data = parse_reddit_user_history(html_content)
+    output_path("parse_reddit_user_history.html").write_text(json.dumps(my_parsed_data.scraped_data), encoding="utf-8") 
+
+def test_parse_reddit_topic_page():
+    html_file_path = output_path("reddit_read_topic.html")
+    with open(html_file_path, "r", encoding="utf-8") as file:
+        html_content = file.read()
+
+    my_parsed_data = parse_reddit_topic_page(html_content)
+    output_path("parse_reddit_read_topic.html").write_text(json.dumps(my_parsed_data.scraped_data), encoding="utf-8") 
