@@ -1,10 +1,9 @@
 import requests
-from modules.http_request import http_request 
 from concurrent.futures import ThreadPoolExecutor
 
-class get_proxy_list(http_request):
+class get_proxy_list():
     def __init__(self, url, session):
-        super().__init__('get', url, session)
+        self.response = session.get(url=url)
         self.proxy_list = self.response.text.split('\n')
         with ThreadPoolExecutor(max_workers=10) as executor: # Adjust max_workers as needed
             results = executor.map(self.comb_proxy_list, self.proxy_list)
