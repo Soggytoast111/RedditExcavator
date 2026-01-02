@@ -16,7 +16,7 @@ class parse_reddit_topic_list():
         self.scraped_data = scraped_data
 
 class parse_reddit_user_history():
-    def __init__(self, html_content, author):
+    def __init__(self, html_content, status_code, author):
         soup = BeautifulSoup(html_content, "html.parser")
         titles = soup.find_all(class_="thing")
         times = soup.find_all("time")

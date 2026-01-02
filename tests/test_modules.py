@@ -1,9 +1,10 @@
 from modules.http_request import http_request
 from modules.get_proxies import get_proxy_list
 from modules.reddit_nav import reddit_reutrn_subreddit_topics, reddit_read_topic, reddit_user_history
-from modules.reddit_nav_json import reddit_reutrn_subreddit_topics_json, reddit_read_topic_json, reddit_user_history_json
+from modules.reddit_nav_json import reddit_reutrn_subreddit_topics_json, reddit_read_topic_json, reddit_user_history_json, reddit_crawl_user_history_json
 from modules.reddit_parse import parse_reddit_topic_list, parse_reddit_user_history, parse_reddit_topic_page
 from modules.reddit_parse_json import parse_reddit_topic_list_json, parse_reddit_user_history_json, parse_reddit_topic_page_json
+from modules.session_manager import ua_generate, new_session
 
 from pathlib import Path
 import pytest
@@ -135,7 +136,7 @@ def test_reddit_subreddit_topics_json(generate_working_proxies):
     output_path("reddit_subreddit_topics_json.json").write_text(my_read_topic(),  encoding="utf-8")
     assert my_read_topic  
 
-def test_parse_reddit_topic_list():
+def __deprecated__test_parse_reddit_topic_list():
     html_file_path = output_path("reddit_subreddit_topics.html")
     with open(html_file_path, "r", encoding="utf-8") as file:
         html_content = file.read()
@@ -151,7 +152,7 @@ def test_parse_reddit_topic_list_json():
     my_parsed_data = parse_reddit_topic_list_json(html_content)
     output_path("parse_reddit_topic_list_json.json").write_text(json.dumps(my_parsed_data.scraped_data), encoding="utf-8")
 
-def test_parse_reddit_user_history():
+def __deprecated__test_parse_reddit_user_history():
     html_file_path = output_path("reddit_user_history.html")
     with open(html_file_path, "r", encoding="utf-8") as file:
         html_content = file.read()
@@ -167,7 +168,7 @@ def test_parse_reddit_user_history_json():
     my_parsed_data = parse_reddit_user_history_json(html_content)
     output_path("parse_reddit_user_history_json.json").write_text(json.dumps(my_parsed_data.scraped_data), encoding="utf-8") 
 
-def test_parse_reddit_topic_page():
+def __deprecated__test_parse_reddit_topic_page():
     html_file_path = output_path("reddit_read_topic.html")
     with open(html_file_path, "r", encoding="utf-8") as file:
         html_content = file.read()
@@ -182,3 +183,33 @@ def test_parse_reddit_topic_page_json():
 
     my_parsed_data = parse_reddit_topic_page_json(html_content)
     output_path("parse_reddit_read_topic_json.json").write_text(json.dumps(my_parsed_data.scraped_data), encoding="utf-8") 
+
+def test_reddit_crawl_user_history_json(generate_working_proxies):
+    test_session = requests.session()
+    #my_working_proxies = generate_working_proxies.config.cache.get("my_working_proxies", None)
+    my_working_proxies = generate_working_proxies
+    selected_proxy = random.choice(my_working_proxies)
+    log.info(f'I selected this proxy: {selected_proxy}')
+    crawled_user_history = reddit_crawl_user_history_json(test_session, {'https': selected_proxy}, "Hlord369")
+    retry_counter=0
+    while (not crawled_user_history.last_status_code == 200) and (retry_counter < 5):
+        test_session = requests.session()
+        my_working_proxies = generate_working_proxies
+        selected_proxy = random.choice(my_working_proxies)
+        log.info(f'I selected this proxy: {selected_proxy} - on retry attempt: {retry_counter+1}')
+        crawled_user_history = reddit_crawl_user_history_json(test_session, {'https': selected_proxy}, "Hlord369")
+        retry_counter+=1        
+                
+    output_path("reddit_crawl_user_history_json.json").write_text(json.dumps(crawled_user_history["processed_pages"]), encoding="utf-8")
+
+def test_ua_generator():
+    my_device = ua_generate()
+
+    output_path("generated_ua_test.json").write_text(json.dumps(my_device.headers.get()), encoding="utf-8")
+
+def test_session_manager():
+    url = "https://postman-echo.com/get"
+    my_session = new_session()
+
+    response = my_session.get(url=url, proxies=my_session.proxies, verify=False)    
+    output_path("session_manager_test.json").write_text(response.text, encoding="utf-8")

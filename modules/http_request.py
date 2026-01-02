@@ -9,3 +9,6 @@ class http_request:
 
     def __call__(self):
         return self.response.text
+    
+    def status_code(self):
+        return self.response.status_code
